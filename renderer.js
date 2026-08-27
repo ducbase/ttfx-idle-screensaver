@@ -23,7 +23,7 @@ function stop() {
     if (stopping)
         return;
     stopping = true;
-    terminal?.feed_child('\x03', -1);
+    terminal?.feed_child('\x03');
     window?.close();
     app.quit();
 }
@@ -40,14 +40,7 @@ function runEffect() {
         null,
         -1,
         null,
-        (term, result) => {
-            try {
-                term.spawn_async_finish(result);
-            } catch (error) {
-                logError(error, 'Unable to start ttfx');
-                stop();
-            }
-        },
+        () => {},
     );
 }
 
