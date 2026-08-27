@@ -11,7 +11,7 @@ export default class TtfxIdleScreensaverExtension extends Extension {
         this._sessionSettings = new Gio.Settings({schema_id: 'org.gnome.desktop.session'});
         this._idleMonitor = global.backend.get_core_idle_monitor();
         this._renderer = null;
-        this._idleWatch = 0;
+        this._idlePollSource = 0;
         this._activeWatch = 0;
         this._forceStopSource = 0;
         this._signals = [
@@ -45,14 +45,17 @@ export default class TtfxIdleScreensaverExtension extends Extension {
     }
 
     _reset() {
-        this._clearWatches();
+        this._clearIdlePoll();
         if (!this._automaticAllowed()) {
+            this._clearActiveWatch();
             this._notifyUnavailable();
             this._stopRenderer();
             return;
         }
-        const seconds = Math.max(1, this._settings.get_uint('delay-seconds') || DEFAULT_DELAY_SECONDS);
-        this._idleWatch = this._idleMonitor.add_idle_watch(seconds * 1000, () => this._launch(false));
+        if (this._renderer)
+            return;
+        this._clearActiveWatch();
+        this._startIdlePolling();
     }
 
     _preview() {
@@ -65,7 +68,8 @@ export default class TtfxIdleScreensaverExtension extends Extension {
         const artPath = this._artPath();
         if (!GLib.file_test(artPath, GLib.FileTest.IS_REGULAR))
             return;
-        this._clearIdleWatch();
+        if (!preview)
+            this._clearIdlePoll();
         if (!preview)
             this._activeWatch = this._idleMonitor.add_user_active_watch(() => this._stopRenderer());
         this._renderer = Gio.Subprocess.new(['gjs', '-m', this.dir.get_child('renderer.js').get_path(), artPath], Gio.SubprocessFlags.NONE);
@@ -112,13 +116,33 @@ export default class TtfxIdleScreensaverExtension extends Extension {
         }
     }
 
-    _clearIdleWatch() {
-        if (this._idleWatch) this._idleMonitor.remove_watch(this._idleWatch);
-        this._idleWatch = 0;
+    _startIdlePolling() {
+        const thresholdMs = Math.max(1, this._settings.get_uint('delay-seconds') || DEFAULT_DELAY_SECONDS) * 1000;
+        const checkIdle = () => {
+            if (!this._automaticAllowed()) {
+                this._idlePollSource = 0;
+                this._reset();
+                return GLib.SOURCE_REMOVE;
+            }
+            if (this._idleMonitor.get_idletime() >= thresholdMs) {
+                this._idlePollSource = 0;
+                this._launch(false);
+                return GLib.SOURCE_REMOVE;
+            }
+            return GLib.SOURCE_CONTINUE;
+        };
+        if (checkIdle() === GLib.SOURCE_REMOVE)
+            return;
+        this._idlePollSource = GLib.timeout_add_seconds(GLib.PRIORITY_DEFAULT, 1, checkIdle);
+    }
+
+    _clearIdlePoll() {
+        if (this._idlePollSource) GLib.Source.remove(this._idlePollSource);
+        this._idlePollSource = 0;
     }
     _clearActiveWatch() {
         if (this._activeWatch) this._idleMonitor.remove_watch(this._activeWatch);
         this._activeWatch = 0;
     }
-    _clearWatches() { this._clearIdleWatch(); this._clearActiveWatch(); }
+    _clearWatches() { this._clearIdlePoll(); this._clearActiveWatch(); }
 }
