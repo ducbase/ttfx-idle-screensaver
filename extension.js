@@ -82,7 +82,7 @@ export default class TtfxIdleScreensaverExtension extends Extension {
     }
 
     _artPath() {
-        return this._settings.get_string('art-path') || this.dir.get_child('art/ubuntu.txt').get_path();
+        return this._settings.get_string('art-path') || this.dir.get_child('art/screensaver.txt').get_path();
     }
 
     _notifyUnavailable() {

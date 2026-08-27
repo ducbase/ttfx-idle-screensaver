@@ -16,12 +16,16 @@ Enable it in the Extensions app. Automatic mode requires **Settings â†’ Power â†
 
 ## Custom art
 
-The default `art/ubuntu.txt` spells Ubuntu in **Delta Corps Priest 1**, the FIGlet font used by Omarchy. Set **Custom art file** in the extension preferences to a readable plain-text file, or edit a copy of the bundled file. Never point it at a command: this extension reads text only.
+The default `art/screensaver.txt` spells Ubuntu in **Delta Corps Priest 1**, the FIGlet font used by Omarchy. Set **Custom art file** in the extension preferences to a readable plain-text file, or edit the bundled file. Never point it at a command: this extension reads text only.
+
+You can also ask an agent to update the file. For example:
+
+> Update the `art/screensaver.txt` file with the text 'Omarchy' in ASCII font **Delta Corps Priest 1** (a FIGlet font).
 
 To generate comparable art with Omarchy installed:
 
 ```bash
-omarchy ascii Ubuntu > ubuntu.txt
+omarchy ascii Ubuntu > art/screensaver.txt
 ```
 
 ## Credits
