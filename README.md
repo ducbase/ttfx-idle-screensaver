@@ -20,9 +20,15 @@ Enable it in the Extensions app. Automatic mode requires **Settings â†’ Power â†
 
 Generate a plain-text file, then choose it in the extension preferences.
 
+With Omarchy:
+
 ```bash
 omarchy ascii Ubuntu > ~/screensaver.txt
 ```
+
+Or ask an agent:
+
+> Write ASCII art of 'Ubuntu' in FIGlet font **Delta Corps Priest 1** to `~/screensaver.txt`.
 
 Open the extension preferences, click **Choose** next to **Custom art file**, and pick that file. Use **Preview** to see it. **Clear** restores the bundled art. This extension reads text only; never point it at a command.
 
