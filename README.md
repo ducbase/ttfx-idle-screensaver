@@ -16,15 +16,13 @@ Enable it in the Extensions app. Automatic mode requires **Settings â†’ Power â†
 
 ## Custom art
 
-Generate a plain-text file, then point the installed extension at it.
-
-With Omarchy:
+Generate a plain-text file, then choose it in the extension preferences.
 
 ```bash
 omarchy ascii Ubuntu > ~/screensaver.txt
 ```
 
-Set **Custom art file** in the extension preferences to that file's absolute path, for example `/home/you/screensaver.txt`. Use **Preview** to see it. The path must be absolute; this extension reads text only, never a command.
+Open the extension preferences, click **Choose** next to **Custom art file**, and pick that file. Use **Preview** to see it. **Clear** restores the bundled art. This extension reads text only; never point it at a command.
 
 To replace the bundled file instead:
 

@@ -9,7 +9,7 @@ export default class TtfxIdleScreensaverPreferences extends ExtensionPreferences
         const page = new Adw.PreferencesPage();
         const group = new Adw.PreferencesGroup({
             title: 'Screensaver',
-            description: 'Custom art file is an absolute path to a plain-text file. Leave it empty to use the bundled art.',
+            description: 'Choose a plain-text art file, or clear it to use the bundled art.',
         });
         page.add(group);
         const enabled = new Adw.SwitchRow({title: 'Enable automatic screensaver'});
@@ -18,8 +18,43 @@ export default class TtfxIdleScreensaverPreferences extends ExtensionPreferences
         const delay = new Adw.SpinRow({title: 'Idle delay', subtitle: 'Seconds before starting', adjustment: new Gtk.Adjustment({lower: 1, upper: 3600, step_increment: 30})});
         settings.bind('delay-seconds', delay, 'value', Gio.SettingsBindFlags.DEFAULT);
         group.add(delay);
-        const art = new Adw.EntryRow({title: 'Custom art file'});
-        settings.bind('art-path', art, 'text', Gio.SettingsBindFlags.DEFAULT);
+        const art = new Adw.ActionRow({title: 'Custom art file'});
+        const choose = new Gtk.Button({label: 'Choose'});
+        const clear = new Gtk.Button({label: 'Clear'});
+        const updateArt = () => {
+            const path = settings.get_string('art-path');
+            art.subtitle = path || 'Bundled art';
+            clear.sensitive = Boolean(path);
+        };
+        choose.connect('clicked', () => {
+            const dialog = new Gtk.FileDialog({title: 'Select art file', modal: true});
+            const filter = new Gtk.FileFilter({name: 'Text files'});
+            filter.add_mime_type('text/plain');
+            filter.add_pattern('*.txt');
+            const filters = Gio.ListStore.new(Gtk.FileFilter);
+            filters.append(filter);
+            dialog.set_filters(filters);
+            dialog.set_default_filter(filter);
+            const current = settings.get_string('art-path');
+            if (current)
+                dialog.set_initial_file(Gio.File.new_for_path(current));
+            dialog.open(window, null, (_source, result) => {
+                try {
+                    const path = dialog.open_finish(result)?.get_path();
+                    if (path)
+                        settings.set_string('art-path', path);
+                } catch (e) {
+                    if (!e.matches(Gtk.DialogError, Gtk.DialogError.DISMISSED))
+                        console.error(e);
+                }
+            });
+        });
+        clear.connect('clicked', () => settings.set_string('art-path', ''));
+        settings.connect('changed::art-path', updateArt);
+        updateArt();
+        art.add_suffix(clear);
+        art.add_suffix(choose);
+        art.set_activatable_widget(choose);
         group.add(art);
         const preview = new Adw.ActionRow({title: 'Preview'});
         const previewButton = new Gtk.Button({label: 'Start'});
