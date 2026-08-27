@@ -6,7 +6,7 @@ A GNOME Shell 48 extension for Ubuntu that starts a full-screen `ttfx` animation
 
 ## Install
 
-Install `ttfx`, then download the ZIP from the GitHub Actions artifact and run:
+Install `ttfx`, then download `ttfx-idle-screensaver@ducbase.com.zip` from [Releases](https://github.com/ducbase/ttfx-idle-screensaver/releases) and run:
 
 ```bash
 gnome-extensions install --force ttfx-idle-screensaver@ducbase.com.zip
@@ -37,3 +37,10 @@ This project is inspired by Omarchy's terminal screensaver. See its [screensaver
 ## Development
 
 Run `./tools/package.sh` to produce a root-layout extension ZIP in `dist/`. The ZIP intentionally contains schema XML, not `gschemas.compiled`.
+
+Push a `v*` tag to publish that ZIP as a GitHub Release:
+
+```bash
+git tag v0.1.0
+git push origin v0.1.0
+```
