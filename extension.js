@@ -41,8 +41,7 @@ export default class TtfxIdleScreensaverExtension extends Extension {
         return this._settings.get_boolean('enabled') &&
             this._sessionSettings.get_uint('idle-delay') === 0 &&
             GLib.find_program_in_path('ttfx') !== null &&
-            GLib.find_program_in_path('gjs') !== null &&
-            Main.sessionMode.currentMode === 'user';
+            GLib.find_program_in_path('gjs') !== null;
     }
 
     _reset() {
