@@ -3,9 +3,13 @@ on:
   pull_request:
   push:
   workflow_dispatch:
+permissions:
+  contents: read
 jobs:
   package:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
       - name: Validate schema
@@ -16,3 +20,8 @@ jobs:
         with:
           name: ttfx-idle-screensaver-extension
           path: dist/*.zip
+      - name: Publish GitHub Release
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release create "$GITHUB_REF_NAME" dist/*.zip --generate-notes --title "$GITHUB_REF_NAME"

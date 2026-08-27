@@ -6,7 +6,7 @@ A GNOME Shell 48 extension for Ubuntu that starts a full-screen `ttfx` animation
 
 ## Install
 
-Install `ttfx`, then download the ZIP from the GitHub Actions artifact and run:
+Install `ttfx`, then download `ttfx-idle-screensaver@ducbase.com.zip` from [Releases](https://github.com/ducbase/ttfx-idle-screensaver/releases) and run:
 
 ```bash
 gnome-extensions install --force ttfx-idle-screensaver@ducbase.com.zip
@@ -16,16 +16,18 @@ Enable it in the Extensions app. Automatic mode requires **Settings â†’ Power â†
 
 ## Custom art
 
-The default `art/screensaver.txt` spells Ubuntu in **Delta Corps Priest 1**, the FIGlet font used by Omarchy. Set **Custom art file** in the extension preferences to a readable plain-text file, or edit the bundled file. Never point it at a command: this extension reads text only.
-
-You can also ask an agent to update the file. For example:
-
-> Update the `art/screensaver.txt` file with the text 'Omarchy' in ASCII font **Delta Corps Priest 1** (a FIGlet font).
-
-To generate comparable art with Omarchy installed:
+Generate a plain-text file, then choose it in the extension preferences.
 
 ```bash
-omarchy ascii Ubuntu > art/screensaver.txt
+omarchy ascii Ubuntu > ~/screensaver.txt
+```
+
+Open the extension preferences, click **Choose** next to **Custom art file**, and pick that file. Use **Preview** to see it. **Clear** restores the bundled art. This extension reads text only; never point it at a command.
+
+To replace the bundled file instead:
+
+```bash
+cp ~/screensaver.txt ~/.local/share/gnome-shell/extensions/ttfx-idle-screensaver@ducbase.com/art/screensaver.txt
 ```
 
 ## Credits
@@ -35,3 +37,10 @@ This project is inspired by Omarchy's terminal screensaver. See its [screensaver
 ## Development
 
 Run `./tools/package.sh` to produce a root-layout extension ZIP in `dist/`. The ZIP intentionally contains schema XML, not `gschemas.compiled`.
+
+Push a `v*` tag to publish that ZIP as a GitHub Release:
+
+```bash
+git tag v0.1.0
+git push origin v0.1.0
+```
