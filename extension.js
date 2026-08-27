@@ -19,6 +19,7 @@ export default class TtfxIdleScreensaverExtension extends Extension {
             [this._sessionSettings, this._sessionSettings.connect('changed::idle-delay', () => this._reset())],
             [this._settings, this._settings.connect('changed::preview-request', () => this._preview())],
             [this._settings, this._settings.connect('changed::stop-request', () => this._stopRenderer())],
+            [Main.sessionMode, Main.sessionMode.connect('updated', () => this._reset())],
         ];
         this._reset();
     }
@@ -45,6 +46,7 @@ export default class TtfxIdleScreensaverExtension extends Extension {
     _reset() {
         this._clearWatches();
         if (!this._automaticAllowed()) {
+            this._notifyUnavailable();
             this._stopRenderer();
             return;
         }
@@ -79,6 +81,20 @@ export default class TtfxIdleScreensaverExtension extends Extension {
 
     _artPath() {
         return this._settings.get_string('art-path') || this.dir.get_child('art/ubuntu.txt').get_path();
+    }
+
+    _notifyUnavailable() {
+        const message = GLib.find_program_in_path('ttfx') === null
+            ? 'Install ttfx to enable the screensaver.'
+            : this._sessionSettings.get_uint('idle-delay') !== 0
+                ? 'Set Settings → Power → Blank Screen to Never to enable automatic mode.'
+                : null;
+        if (message && this._lastNotification !== message) {
+            Main.notify('TTFX Idle Screensaver', message);
+            this._lastNotification = message;
+        }
+        if (!message)
+            this._lastNotification = null;
     }
 
     _stopRenderer() {

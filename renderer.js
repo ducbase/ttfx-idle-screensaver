@@ -65,12 +65,12 @@ app.connect('activate', () => {
         if (!stopping)
             runEffect();
     });
-    window.set_child(terminal);
-    window.connect('close-request', () => {
+    window.add(terminal);
+    window.connect('delete-event', () => {
         stop();
         return false;
     });
-    window.present();
+    window.show_all();
     runEffect();
 });
 
