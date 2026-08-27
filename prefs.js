@@ -9,7 +9,7 @@ export default class TtfxIdleScreensaverPreferences extends ExtensionPreferences
         const page = new Adw.PreferencesPage();
         const group = new Adw.PreferencesGroup({
             title: 'Screensaver',
-            description: 'Leave Custom art file empty to use the bundled Ubuntu art. A persistent override must be an absolute path, for example /home/you/.config/ttfx-idle-screensaver/screensaver.txt. Relative paths are not reliable. Editing the installed extension copy is overwritten on reinstall.',
+            description: 'Custom art file is an absolute path to a plain-text file. Leave it empty to use the bundled art.',
         });
         page.add(group);
         const enabled = new Adw.SwitchRow({title: 'Enable automatic screensaver'});

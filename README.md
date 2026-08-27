@@ -16,35 +16,20 @@ Enable it in the Extensions app. Automatic mode requires **Settings â†’ Power â†
 
 ## Custom art
 
-The bundled default is `art/screensaver.txt`. It spells Ubuntu in **Delta Corps Priest 1**, the FIGlet font used by Omarchy. This extension reads plain text only. Never point it at a command.
+Generate a plain-text file, then point the installed extension at it.
 
-**Persistent override (recommended).** Set **Custom art file** in the extension preferences to an **absolute** path of a readable text file, for example `/home/you/.config/ttfx-idle-screensaver/screensaver.txt`. That setting survives extension reinstalls. Relative paths are resolved against GNOME Shell's working directory, not this repository and not your home directory, so they are not reliable.
-
-A per-user file under your home directory is the right place for custom art. Do not put it in `/etc`: this is a user-session GNOME Shell extension, not a system service. Do not treat the installed extension directory as a config location either; `gnome-extensions install --force` overwrites it.
-
-**Repository checkout.** Editing `art/screensaver.txt` here only becomes the installed default after you rebuild and reinstall:
+With Omarchy:
 
 ```bash
-./tools/package.sh
-gnome-extensions install --force dist/ttfx-idle-screensaver@ducbase.com.zip
+omarchy ascii Ubuntu > ~/screensaver.txt
 ```
 
-Then stop and restart the animation, or wait for the next idle launch. An already-running renderer does not reload the file.
+Set **Custom art file** in the extension preferences to that file's absolute path, for example `/home/you/screensaver.txt`. Use **Preview** to see it. The path must be absolute; this extension reads text only, never a command.
 
-**Installed bundled file.** Editing `~/.local/share/gnome-shell/extensions/ttfx-idle-screensaver@ducbase.com/art/screensaver.txt` affects the next renderer launch only. A later reinstall overwrites it. Prefer **Custom art file**.
-
-You can also ask an agent. For a repository/default change:
-
-> Update `art/screensaver.txt` with the text 'Omarchy' in ASCII font **Delta Corps Priest 1** (a FIGlet font). Rebuild and reinstall the extension ZIP so the bundled default updates.
-
-For a persistent user override:
-
-> Write the art to `/home/YOU/.config/ttfx-idle-screensaver/screensaver.txt` and set **Custom art file** in the extension preferences to that absolute path.
-
-To generate comparable art with Omarchy installed:
+To replace the bundled file instead:
 
 ```bash
-omarchy ascii Ubuntu > art/screensaver.txt
+cp ~/screensaver.txt ~/.local/share/gnome-shell/extensions/ttfx-idle-screensaver@ducbase.com/art/screensaver.txt
 ```
 
 ## Credits
