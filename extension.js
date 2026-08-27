@@ -15,7 +15,9 @@ export default class TtfxIdleScreensaverExtension extends Extension {
         this._activeWatch = 0;
         this._forceStopSource = 0;
         this._signals = [
-            [this._settings, this._settings.connect('changed', () => this._reset())],
+            [this._settings, this._settings.connect('changed::enabled', () => this._reset())],
+            [this._settings, this._settings.connect('changed::delay-seconds', () => this._reset())],
+            [this._settings, this._settings.connect('changed::art-path', () => this._reset())],
             [this._sessionSettings, this._sessionSettings.connect('changed::idle-delay', () => this._reset())],
             [this._settings, this._settings.connect('changed::preview-request', () => this._preview())],
             [this._settings, this._settings.connect('changed::stop-request', () => this._stopRenderer())],
@@ -65,7 +67,8 @@ export default class TtfxIdleScreensaverExtension extends Extension {
         if (!GLib.file_test(artPath, GLib.FileTest.IS_REGULAR))
             return;
         this._clearIdleWatch();
-        this._activeWatch = this._idleMonitor.add_user_active_watch(() => this._stopRenderer());
+        if (!preview)
+            this._activeWatch = this._idleMonitor.add_user_active_watch(() => this._stopRenderer());
         this._renderer = Gio.Subprocess.new(['gjs', '-m', this.dir.get_child('renderer.js').get_path(), artPath], Gio.SubprocessFlags.NONE);
         this._renderer.wait_async(null, () => {
             this._renderer = null;
