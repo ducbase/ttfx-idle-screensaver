@@ -28,13 +28,16 @@ export default class TtfxIdleScreensaverPreferences extends ExtensionPreferences
         };
         choose.connect('clicked', () => {
             const dialog = new Gtk.FileDialog({title: 'Select art file', modal: true});
-            const filter = new Gtk.FileFilter({name: 'Text files'});
-            filter.add_mime_type('text/plain');
-            filter.add_pattern('*.txt');
+            const text = new Gtk.FileFilter({name: 'Text files'});
+            text.add_mime_type('text/plain');
+            text.add_pattern('*.txt');
+            const all = new Gtk.FileFilter({name: 'All files'});
+            all.add_pattern('*');
             const filters = Gio.ListStore.new(Gtk.FileFilter);
-            filters.append(filter);
+            filters.append(text);
+            filters.append(all);
             dialog.set_filters(filters);
-            dialog.set_default_filter(filter);
+            dialog.set_default_filter(text);
             const current = settings.get_string('art-path');
             if (current)
                 dialog.set_initial_file(Gio.File.new_for_path(current));
