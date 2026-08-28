@@ -102,3 +102,55 @@ test('extension uses event watches without polling or session-mode resets', asyn
     assert.doesNotMatch(source, /_startIdlePolling|_idlePollSource|add_seconds/);
     assert.doesNotMatch(source, /Main\.sessionMode\.connect\('updated'/);
 });
+
+test('renderer callbacks retain instance ownership across disable and re-enable', async () => {
+    const source = await readFile(new URL('../extension.js', import.meta.url), 'utf8');
+    const callbackStart = source.indexOf('renderer.wait_async(null, () => {');
+    const callbackEnd = source.indexOf('\n        });', callbackStart);
+    const callback = source.slice(callbackStart, callbackEnd);
+
+    assert.notEqual(callbackStart, -1, 'renderer exit callback should exist');
+    assert.match(source, /const renderer = Gio\.Subprocess\.new\(/,
+        'each launch must retain the exact renderer it created');
+    assert.match(source, /this\._renderer = renderer;/);
+    assert.match(callback, /if \(renderer !== this\._renderer\)\s*return;/,
+        'an old exit callback must not mutate a newer renderer lifecycle');
+    assert.match(callback, /if \(this\._idleWatchController === null\)\s*return;/);
+    assert.ok(
+        callback.indexOf('if (renderer !== this._renderer)') <
+            callback.indexOf('this._renderer = null;'),
+        'only the current renderer may clear renderer ownership',
+    );
+    assert.ok(
+        callback.indexOf('this._renderer = null;') <
+            callback.indexOf('if (this._idleWatchController === null)'),
+        'a disabled current-renderer exit must clear renderer ownership before returning',
+    );
+    assert.ok(
+        callback.indexOf('this._clearForceStop(renderer);') <
+            callback.indexOf('if (this._idleWatchController === null)'),
+        'a disabled current-renderer exit must clear its force-stop bookkeeping before returning',
+    );
+    assert.ok(
+        callback.indexOf('if (this._idleWatchController === null)') <
+            callback.indexOf('this._clearActiveWatch()'),
+        'a disabled extension must return before clearing its nulled active-watch lifecycle',
+    );
+    assert.ok(
+        callback.indexOf('if (this._idleWatchController === null)') < callback.indexOf('this._reset()'),
+        'a disabled extension must return before resetting its nulled idle-watch lifecycle',
+    );
+
+    const stopStart = source.indexOf('    _stopRenderer() {');
+    const stopEnd = source.indexOf('\n    _clearActiveWatch()', stopStart);
+    const stopRenderer = source.slice(stopStart, stopEnd);
+    assert.match(stopRenderer, /const renderer = this\._renderer;/,
+        'force-stop must capture the renderer it is scheduled to stop');
+    assert.match(stopRenderer, /renderer\.force_exit\(\);/);
+    assert.doesNotMatch(stopRenderer, /this\._renderer\?\.force_exit\(\)/,
+        'force-stop must never resolve the renderer from mutable extension state');
+    assert.match(stopRenderer, /if \(this\._forceStopSource === forceStopSource &&\s*this\._forceStopRenderer === renderer\)/,
+        'only a timeout may clear its own bookkeeping');
+    assert.match(callback, /this\._clearForceStop\(renderer\);/,
+        'only the exiting renderer may clear its force-stop timeout');
+});

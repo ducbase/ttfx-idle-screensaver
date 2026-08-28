@@ -18,6 +18,7 @@ export default class TtfxIdleScreensaverExtension extends Extension {
         );
         this._activeWatch = 0;
         this._forceStopSource = 0;
+        this._forceStopRenderer = null;
         this._signals = [
             [this._settings, this._settings.connect('changed::enabled', () => this._reset())],
             [this._settings, this._settings.connect('changed::delay-seconds', () => this._reset())],
@@ -91,14 +92,16 @@ export default class TtfxIdleScreensaverExtension extends Extension {
                 this._stopRenderer();
             });
         }
-        this._renderer = Gio.Subprocess.new(['gjs', '-m', this.dir.get_child('renderer.js').get_path(), artPath], Gio.SubprocessFlags.NONE);
-        this._renderer.wait_async(null, () => {
+        const renderer = Gio.Subprocess.new(['gjs', '-m', this.dir.get_child('renderer.js').get_path(), artPath], Gio.SubprocessFlags.NONE);
+        this._renderer = renderer;
+        renderer.wait_async(null, () => {
+            if (renderer !== this._renderer)
+                return;
             this._renderer = null;
+            this._clearForceStop(renderer);
+            if (this._idleWatchController === null)
+                return;
             this._clearActiveWatch();
-            if (this._forceStopSource) {
-                GLib.Source.remove(this._forceStopSource);
-                this._forceStopSource = 0;
-            }
             if (!preview)
                 this._reset();
         });
@@ -123,16 +126,33 @@ export default class TtfxIdleScreensaverExtension extends Extension {
     }
 
     _stopRenderer() {
-        if (!this._renderer)
+        const renderer = this._renderer;
+        if (!renderer)
             return;
-        this._renderer.send_signal(15);
+        renderer.send_signal(15);
         if (!this._forceStopSource) {
-            this._forceStopSource = GLib.timeout_add(GLib.PRIORITY_DEFAULT, 1500, () => {
-                this._renderer?.force_exit();
-                this._forceStopSource = 0;
+            let forceStopSource = 0;
+            forceStopSource = GLib.timeout_add(GLib.PRIORITY_DEFAULT, 1500, () => {
+                renderer.force_exit();
+                if (this._forceStopSource === forceStopSource &&
+                    this._forceStopRenderer === renderer) {
+                    this._forceStopSource = 0;
+                    this._forceStopRenderer = null;
+                }
                 return GLib.SOURCE_REMOVE;
             });
+            this._forceStopSource = forceStopSource;
+            this._forceStopRenderer = renderer;
         }
+    }
+
+    _clearForceStop(renderer) {
+        if (this._forceStopRenderer !== renderer)
+            return;
+        if (this._forceStopSource)
+            GLib.Source.remove(this._forceStopSource);
+        this._forceStopSource = 0;
+        this._forceStopRenderer = null;
     }
 
     _clearActiveWatch() {
