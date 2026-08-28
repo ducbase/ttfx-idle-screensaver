@@ -93,3 +93,12 @@ test('a fired watch can be armed again', () => {
     assert.equal(controller.arm(20_000, () => {}), 42);
     assert.equal(monitor.added.length, 2);
 });
+
+test('extension uses event watches without polling or session-mode resets', async () => {
+    const source = await readFile(new URL('../extension.js', import.meta.url), 'utf8');
+
+    assert.match(source, /new IdleWatchController\(/);
+    assert.match(source, /\.arm\(thresholdMs, \(\) => this\._launch\(false\)\)/);
+    assert.doesNotMatch(source, /_startIdlePolling|_idlePollSource|add_seconds/);
+    assert.doesNotMatch(source, /Main\.sessionMode\.connect\('updated'/);
+});
