@@ -19,6 +19,8 @@ export default class TtfxIdleScreensaverExtension extends Extension {
         this._activeWatch = 0;
         this._forceStopSource = 0;
         this._forceStopRenderer = null;
+        this._rendererWindowCreatedId = 0;
+        this._rendererWindowCreatedRenderer = null;
         this._signals = [
             [this._settings, this._settings.connect('changed::enabled', () => this._reset())],
             [this._settings, this._settings.connect('changed::delay-seconds', () => this._reset())],
@@ -94,9 +96,11 @@ export default class TtfxIdleScreensaverExtension extends Extension {
         }
         const renderer = Gio.Subprocess.new(['gjs', '-m', this.dir.get_child('renderer.js').get_path(), artPath], Gio.SubprocessFlags.NONE);
         this._renderer = renderer;
+        this._watchRendererWindow(renderer);
         renderer.wait_async(null, () => {
             if (renderer !== this._renderer)
                 return;
+            this._clearRendererWindowWatch(renderer);
             this._renderer = null;
             this._clearForceStop(renderer);
             if (this._idleWatchController === null)
@@ -129,6 +133,7 @@ export default class TtfxIdleScreensaverExtension extends Extension {
         const renderer = this._renderer;
         if (!renderer)
             return;
+        this._clearRendererWindowWatch(renderer);
         renderer.send_signal(15);
         if (!this._forceStopSource) {
             let forceStopSource = 0;
@@ -155,6 +160,28 @@ export default class TtfxIdleScreensaverExtension extends Extension {
         this._forceStopRenderer = null;
     }
 
+    _watchRendererWindow(renderer) {
+        const rendererPid = Number.parseInt(renderer.get_identifier(), 10);
+        if (!Number.isSafeInteger(rendererPid) || rendererPid <= 0)
+            return;
+        this._rendererWindowCreatedRenderer = renderer;
+        this._rendererWindowCreatedId = global.display.connect('window-created', (_display, metaWindow) => {
+            if (renderer !== this._renderer || metaWindow.get_pid() !== rendererPid)
+                return;
+            metaWindow.make_above();
+            this._clearRendererWindowWatch(renderer);
+        });
+    }
+
+    _clearRendererWindowWatch(renderer) {
+        if (this._rendererWindowCreatedRenderer !== renderer)
+            return;
+        if (this._rendererWindowCreatedId)
+            global.display.disconnect(this._rendererWindowCreatedId);
+        this._rendererWindowCreatedId = 0;
+        this._rendererWindowCreatedRenderer = null;
+    }
+
     _clearActiveWatch() {
         if (this._activeWatch) this._idleMonitor.remove_watch(this._activeWatch);
         this._activeWatch = 0;
@@ -162,5 +189,6 @@ export default class TtfxIdleScreensaverExtension extends Extension {
     _clearWatches() {
         this._idleWatchController?.clear('disable');
         this._clearActiveWatch();
+        this._clearRendererWindowWatch(this._renderer);
     }
 }

@@ -154,3 +154,50 @@ test('renderer callbacks retain instance ownership across disable and re-enable'
     assert.match(callback, /this\._clearForceStop\(renderer\);/,
         'only the exiting renderer may clear its force-stop timeout');
 });
+
+test('renderer promotion is PID-scoped and clears its one-shot window listener', async () => {
+    const source = await readFile(new URL('../extension.js', import.meta.url), 'utf8');
+    const promoteStart = source.indexOf('    _watchRendererWindow(renderer) {');
+    const promoteEnd = source.indexOf('\n    _clearRendererWindowWatch(renderer) {', promoteStart);
+    const promote = source.slice(promoteStart, promoteEnd);
+
+    assert.notEqual(promoteStart, -1, 'renderer promotion helper should exist');
+    assert.match(promote, /Number\.parseInt\(renderer\.get_identifier\(\), 10\)/,
+        'promotion must capture the renderer PID while the subprocess is live');
+    assert.match(promote, /global\.display\.connect\('window-created'/,
+        'promotion must observe the renderer window mapping');
+    assert.match(promote, /metaWindow\.get_pid\(\) !== rendererPid/,
+        'promotion must only target the renderer process');
+    assert.match(promote, /metaWindow\.make_above\(\);/,
+        'the matching renderer window must become always-on-top');
+    assert.doesNotMatch(promote, /\.activate\(|\.focus\(/,
+        'promotion must not disturb user focus');
+    assert.match(promote, /this\._clearRendererWindowWatch\(renderer\);/,
+        'the listener must be removed after the renderer window maps');
+});
+
+test('renderer promotion listener follows renderer lifecycle ownership', async () => {
+    const source = await readFile(new URL('../extension.js', import.meta.url), 'utf8');
+    const callbackStart = source.indexOf('renderer.wait_async(null, () => {');
+    const callbackEnd = source.indexOf('\n        });', callbackStart);
+    const callback = source.slice(callbackStart, callbackEnd);
+    const stopStart = source.indexOf('    _stopRenderer() {');
+    const stopEnd = source.indexOf('\n    _clearForceStop(renderer) {', stopStart);
+    const stopRenderer = source.slice(stopStart, stopEnd);
+    const clearStart = source.indexOf('    _clearRendererWindowWatch(renderer) {');
+    const clearEnd = source.indexOf('\n    _clearActiveWatch()', clearStart);
+    const clearRendererWindowWatch = source.slice(clearStart, clearEnd);
+
+    assert.match(source, /this\._watchRendererWindow\(renderer\);/,
+        'every renderer launch must register its own promotion listener');
+    assert.match(callback, /this\._clearRendererWindowWatch\(renderer\);/,
+        'renderer exit must clear its own pending listener');
+    assert.match(stopRenderer, /this\._clearRendererWindowWatch\(renderer\);/,
+        'renderer stop must clear an unmapped renderer listener');
+    assert.match(source, /this\._clearRendererWindowWatch\(this\._renderer\);/,
+        'extension disable must clear the current renderer listener');
+    assert.match(clearRendererWindowWatch, /this\._rendererWindowCreatedRenderer !== renderer/,
+        'an old renderer must not clear a newer renderer listener');
+    assert.match(clearRendererWindowWatch, /global\.display\.disconnect\(this\._rendererWindowCreatedId\);/,
+        'cleanup must disconnect the display signal');
+});
