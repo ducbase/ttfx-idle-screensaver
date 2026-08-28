@@ -12,6 +12,11 @@ jobs:
       contents: write
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Test idle watch lifecycle
+        run: node --test tests/idle-watch-controller.test.mjs
       - name: Validate schema
         run: glib-compile-schemas --strict --dry-run schemas
       - name: Package
