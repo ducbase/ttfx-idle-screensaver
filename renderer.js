@@ -53,10 +53,19 @@ app.connect('activate', () => {
         cursor_shape: Vte.CursorShape.BLOCK,
         scroll_on_output: false,
     });
+    terminal.add_events(Gdk.EventMask.POINTER_MOTION_MASK | Gdk.EventMask.KEY_PRESS_MASK);
     terminal.set_color_background(new Gdk.RGBA({red: 0, green: 0, blue: 0, alpha: 1}));
     terminal.connect('child-exited', () => {
         if (!stopping)
             runEffect();
+    });
+    terminal.connect('motion-notify-event', () => {
+        stop();
+        return true;
+    });
+    terminal.connect('key-press-event', () => {
+        stop();
+        return true;
     });
     window.add(terminal);
     window.connect('delete-event', () => {
