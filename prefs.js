@@ -59,16 +59,11 @@ export default class TtfxIdleScreensaverPreferences extends ExtensionPreferences
         art.add_suffix(choose);
         art.set_activatable_widget(choose);
         group.add(art);
-        const preview = new Adw.ActionRow({title: 'Preview'});
+        const preview = new Adw.ActionRow({title: 'Preview', subtitle: 'Move the mouse or press any key to stop'});
         const previewButton = new Gtk.Button({label: 'Start'});
         previewButton.connect('clicked', () => settings.set_uint('preview-request', settings.get_uint('preview-request') + 1));
         preview.add_suffix(previewButton);
         group.add(preview);
-        const stop = new Adw.ActionRow({title: 'Stop preview'});
-        const stopButton = new Gtk.Button({label: 'Stop'});
-        stopButton.connect('clicked', () => settings.set_uint('stop-request', settings.get_uint('stop-request') + 1));
-        stop.add_suffix(stopButton);
-        group.add(stop);
         const note = new Adw.PreferencesGroup({description: 'Automatic mode is intentionally inactive until Settings → Power → Blank Screen is set to Never. This extension does not change Ubuntu power or lock settings.'});
         page.add(note);
         window.add(page);

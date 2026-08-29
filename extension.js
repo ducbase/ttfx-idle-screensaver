@@ -27,7 +27,6 @@ export default class TtfxIdleScreensaverExtension extends Extension {
             [this._settings, this._settings.connect('changed::art-path', () => this._reset())],
             [this._sessionSettings, this._sessionSettings.connect('changed::idle-delay', () => this._reset())],
             [this._settings, this._settings.connect('changed::preview-request', () => this._preview())],
-            [this._settings, this._settings.connect('changed::stop-request', () => this._stopRenderer())],
         ];
         this._reset();
     }
