@@ -8,13 +8,15 @@ A GNOME Shell 48 extension for Ubuntu that starts a full-screen `ttfx` animation
 
 ## Install
 
-Install `ttfx`, then download `ttfx-idle-screensaver@ducbase.com.zip` from [Releases](https://github.com/ducbase/ttfx-idle-screensaver/releases) and run:
+Install `ttfx`, then install **TTFX Idle Screensaver** from [GNOME Extensions](https://extensions.gnome.org/). Enable it in the Extensions app.
+
+Until the GNOME Extensions review is complete, or for manual/development installs, download `ttfx-idle-screensaver@ducbase.com.zip` from [Releases](https://github.com/ducbase/ttfx-idle-screensaver/releases) and run:
 
 ```bash
 gnome-extensions install --force ttfx-idle-screensaver@ducbase.com.zip
 ```
 
-Enable it in the Extensions app. Automatic mode requires **Settings → Power → Blank Screen → Never**. This prevents Ubuntu's built-in blanking from covering or competing with the animation. The extension never changes power, idle, or lock settings itself. Preview remains available from preferences.
+Automatic mode requires **Settings → Power → Blank Screen → Never**. This prevents Ubuntu's built-in blanking from covering or competing with the animation. The extension never changes power, idle, or lock settings itself. Preview remains available from preferences.
 
 ## Custom art
 
@@ -52,3 +54,5 @@ Push a `v*` tag to publish that ZIP as a GitHub Release:
 git tag v0.1.0
 git push origin v0.1.0
 ```
+
+For a GNOME Extensions update, upload that release ZIP at [extensions.gnome.org/upload](https://extensions.gnome.org/upload/) with UUID `ttfx-idle-screensaver@ducbase.com`. Upload only the ZIP produced by `./tools/package.sh`: it contains the source schema XML and deliberately omits `schemas/gschemas.compiled`. After the review is approved, the new version becomes available through GNOME Extensions.
