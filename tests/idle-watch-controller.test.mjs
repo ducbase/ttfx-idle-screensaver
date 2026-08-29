@@ -155,6 +155,27 @@ test('renderer callbacks retain instance ownership across disable and re-enable'
         'only the exiting renderer may clear its force-stop timeout');
 });
 
+test('disable removes the renderer force-stop timeout after requesting shutdown', async () => {
+    const source = await readFile(new URL('../extension.js', import.meta.url), 'utf8');
+    const disableStart = source.indexOf('    disable() {');
+    const disableEnd = source.indexOf('\n    _automaticAllowed()', disableStart);
+    const clearForceStopStart = source.indexOf('    _clearForceStop(renderer) {');
+    const clearForceStopEnd = source.indexOf('\n    _watchRendererWindow(renderer) {', clearForceStopStart);
+
+    assert.notEqual(disableStart, -1, 'extension disable method should exist');
+    assert.notEqual(disableEnd, -1, 'extension disable method end marker should exist');
+    assert.notEqual(clearForceStopStart, -1, 'force-stop cleanup helper should exist');
+    assert.notEqual(clearForceStopEnd, -1, 'force-stop cleanup helper end marker should exist');
+
+    const disable = source.slice(disableStart, disableEnd);
+    const clearForceStop = source.slice(clearForceStopStart, clearForceStopEnd);
+
+    assert.match(disable, /this\._stopRenderer\(\);\s*this\._clearForceStop\(this\._renderer\);/,
+        'disable must cancel the force-stop timeout after requesting renderer shutdown');
+    assert.match(clearForceStop, /GLib\.Source\.remove\(this\._forceStopSource\);/,
+        'force-stop cleanup must remove the GLib main-loop source');
+});
+
 test('renderer promotion is PID-scoped and clears its one-shot window listener', async () => {
     const source = await readFile(new URL('../extension.js', import.meta.url), 'utf8');
     const promoteStart = source.indexOf('    _watchRendererWindow(renderer) {');
