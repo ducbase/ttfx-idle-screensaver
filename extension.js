@@ -34,6 +34,7 @@ export default class TtfxIdleScreensaverExtension extends Extension {
     disable() {
         this._clearWatches();
         this._stopRenderer();
+        this._clearForceStop(this._renderer);
         for (const [object, id] of this._signals ?? [])
             object.disconnect(id);
         this._signals = null;
