@@ -1,0 +1,3 @@
+interface:
+  display_name: "GNOME Extensions Release"
+  short_description: "Publish this extension to GitHub and EGO"
