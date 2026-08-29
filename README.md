@@ -30,7 +30,7 @@ Or ask an agent:
 
 > Write ASCII art of 'Ubuntu' in FIGlet font **Delta Corps Priest 1** to `~/screensaver.txt`.
 
-Open the extension preferences, click **Choose** next to **Custom art file**, and pick that file. Use **Preview** to see it. **Clear** restores the bundled art. This extension reads text only; never point it at a command.
+Open the extension preferences, click **Choose** next to **Custom art file**, and pick that file. Use **Preview** to see it; move the mouse or press any key to dismiss the preview. **Clear** restores the bundled art. This extension reads text only; never point it at a command.
 
 To replace the bundled file instead:
 
