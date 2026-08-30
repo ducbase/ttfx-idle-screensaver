@@ -107,6 +107,10 @@ test('extension uses object-owned signal connections and disconnects them on dis
     const source = await readFile(new URL('../extension.js', import.meta.url), 'utf8');
     const disableStart = source.indexOf('    disable() {');
     const disableEnd = source.indexOf('\n    _automaticAllowed()', disableStart);
+
+    assert.notEqual(disableStart, -1, 'extension disable method should exist');
+    assert.notEqual(disableEnd, -1, 'extension disable method end marker should exist');
+
     const disable = source.slice(disableStart, disableEnd);
 
     assert.match(source, /this\._settings\.connectObject\('changed::enabled', \(\) => this\._reset\(\), this\);/);
