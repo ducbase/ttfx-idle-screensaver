@@ -18,6 +18,10 @@ gnome-extensions install --force ttfx-idle-screensaver@ducbase.com.zip
 
 Automatic mode requires **Settings → Power → Blank Screen → Never**. This prevents Ubuntu's built-in blanking from covering or competing with the animation. The extension never changes power, idle, or lock settings itself. Preview remains available from preferences.
 
+## How it works
+
+The current `ttfx` release is a command-line renderer and does not expose a D-Bus control interface. The extension starts `renderer.js` as a separate GJS process so it can own the full-screen GTK window while `ttfx` writes the animation into its terminal. GNOME Shell tracks that process for cleanup and keeps the renderer window above other windows; the process receives `SIGTERM` when the animation is dismissed or the extension is disabled.
+
 ## Custom art
 
 Generate a plain-text file, then choose it in the extension preferences.

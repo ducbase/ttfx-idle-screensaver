@@ -1,2 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<schemalist><schema id="org.gnome.shell.extensions.ttfx-idle-screensaver" path="/org/gnome/shell/extensions/ttfx-idle-screensaver/"><key name="enabled" type="b"><default>true</default></key><key name="delay-seconds" type="u"><default>600</default></key><key name="art-path" type="s"><default>''</default></key><key name="preview-request" type="u"><default>0</default></key></schema></schemalist>
+<schemalist>
+  <schema id="org.gnome.shell.extensions.ttfx-idle-screensaver" path="/org/gnome/shell/extensions/ttfx-idle-screensaver/">
+    <key name="enabled" type="b">
+      <default>true</default>
+    </key>
+    <key name="delay-seconds" type="u">
+      <default>600</default>
+    </key>
+    <key name="art-path" type="s">
+      <default>''</default>
+    </key>
+    <key name="preview-request" type="u">
+      <default>0</default>
+    </key>
+  </schema>
+</schemalist>

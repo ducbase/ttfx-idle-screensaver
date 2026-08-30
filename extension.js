@@ -19,15 +19,11 @@ export default class TtfxIdleScreensaverExtension extends Extension {
         this._activeWatch = 0;
         this._forceStopSource = 0;
         this._forceStopRenderer = null;
-        this._rendererWindowCreatedId = 0;
-        this._rendererWindowCreatedRenderer = null;
-        this._signals = [
-            [this._settings, this._settings.connect('changed::enabled', () => this._reset())],
-            [this._settings, this._settings.connect('changed::delay-seconds', () => this._reset())],
-            [this._settings, this._settings.connect('changed::art-path', () => this._reset())],
-            [this._sessionSettings, this._sessionSettings.connect('changed::idle-delay', () => this._reset())],
-            [this._settings, this._settings.connect('changed::preview-request', () => this._preview())],
-        ];
+        this._settings.connectObject('changed::enabled', () => this._reset(), this);
+        this._settings.connectObject('changed::delay-seconds', () => this._reset(), this);
+        this._settings.connectObject('changed::art-path', () => this._reset(), this);
+        this._sessionSettings.connectObject('changed::idle-delay', () => this._reset(), this);
+        this._settings.connectObject('changed::preview-request', () => this._preview(), this);
         this._reset();
     }
 
@@ -35,9 +31,8 @@ export default class TtfxIdleScreensaverExtension extends Extension {
         this._clearWatches();
         this._stopRenderer();
         this._clearForceStop(this._renderer);
-        for (const [object, id] of this._signals ?? [])
-            object.disconnect(id);
-        this._signals = null;
+        this._settings.disconnectObject(this);
+        this._sessionSettings.disconnectObject(this);
         this._settings = null;
         this._sessionSettings = null;
         this._idleWatchController = null;
@@ -100,7 +95,7 @@ export default class TtfxIdleScreensaverExtension extends Extension {
         renderer.wait_async(null, () => {
             if (renderer !== this._renderer)
                 return;
-            this._clearRendererWindowWatch(renderer);
+            this._clearRendererWindowWatch();
             this._renderer = null;
             this._clearForceStop(renderer);
             if (this._idleWatchController === null)
@@ -133,7 +128,7 @@ export default class TtfxIdleScreensaverExtension extends Extension {
         const renderer = this._renderer;
         if (!renderer)
             return;
-        this._clearRendererWindowWatch(renderer);
+        this._clearRendererWindowWatch();
         renderer.send_signal(15);
         if (!this._forceStopSource) {
             let forceStopSource = 0;
@@ -164,22 +159,16 @@ export default class TtfxIdleScreensaverExtension extends Extension {
         const rendererPid = Number.parseInt(renderer.get_identifier(), 10);
         if (!Number.isSafeInteger(rendererPid) || rendererPid <= 0)
             return;
-        this._rendererWindowCreatedRenderer = renderer;
-        this._rendererWindowCreatedId = global.display.connect('window-created', (_display, metaWindow) => {
+        global.display.connectObject('window-created', (_display, metaWindow) => {
             if (renderer !== this._renderer || metaWindow.get_pid() !== rendererPid)
                 return;
             metaWindow.make_above();
-            this._clearRendererWindowWatch(renderer);
-        });
+            this._clearRendererWindowWatch();
+        }, this);
     }
 
-    _clearRendererWindowWatch(renderer) {
-        if (this._rendererWindowCreatedRenderer !== renderer)
-            return;
-        if (this._rendererWindowCreatedId)
-            global.display.disconnect(this._rendererWindowCreatedId);
-        this._rendererWindowCreatedId = 0;
-        this._rendererWindowCreatedRenderer = null;
+    _clearRendererWindowWatch() {
+        global.display.disconnectObject(this);
     }
 
     _clearActiveWatch() {
@@ -189,6 +178,6 @@ export default class TtfxIdleScreensaverExtension extends Extension {
     _clearWatches() {
         this._idleWatchController?.clear('disable');
         this._clearActiveWatch();
-        this._clearRendererWindowWatch(this._renderer);
+        this._clearRendererWindowWatch();
     }
 }
