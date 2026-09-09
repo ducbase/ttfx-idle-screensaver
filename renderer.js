@@ -14,6 +14,7 @@ if (!artPath)
 let stopping = false;
 let terminal;
 let window;
+let blankCursor;
 const app = new Gtk.Application({
     application_id: 'com.github.ducbase.TtfxIdleScreensaver',
     flags: Gio.ApplicationFlags.NON_UNIQUE,
@@ -26,6 +27,27 @@ function stop() {
     terminal?.feed_child('\x03');
     window?.close();
     app.quit();
+}
+
+function hideRendererPointer() {
+    const root = window?.get_window();
+    if (!root)
+        return;
+
+    if (!blankCursor)
+        blankCursor = Gdk.Cursor.new_for_display(root.get_display(), Gdk.CursorType.BLANK_CURSOR);
+
+    const applyBlankCursor = (gdkWindow) => {
+        if (!gdkWindow)
+            return;
+        gdkWindow.set_cursor(blankCursor);
+        const children = gdkWindow.get_children?.();
+        if (!children)
+            return;
+        for (const child of children)
+            applyBlankCursor(child);
+    };
+    applyBlankCursor(root);
 }
 
 function runEffect() {
@@ -70,6 +92,12 @@ app.connect('activate', () => {
     window.add(terminal);
     window.connect('delete-event', () => {
         stop();
+        return false;
+    });
+    window.connect('realize', hideRendererPointer);
+    terminal.connect('realize', hideRendererPointer);
+    terminal.connect_after('enter-notify-event', () => {
+        hideRendererPointer();
         return false;
     });
     window.show_all();
