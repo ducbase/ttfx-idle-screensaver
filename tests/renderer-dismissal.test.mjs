@@ -6,11 +6,23 @@ test('renderer hides the pointer with an overlay EventBox and dismisses on motio
     const source = await readFile(new URL('../renderer.js', import.meta.url), 'utf8');
 
     assert.match(source, /const overlay = new Gtk\.Overlay\(\);/);
-    assert.match(
-        source,
-        /const inputLayer = new Gtk\.EventBox\(\{[\s\S]*above_child:\s*true,[\s\S]*visible_window:\s*true,[\s\S]*app_paintable:\s*true,[\s\S]*can_focus:\s*false,[\s\S]*halign:\s*Gtk\.Align\.FILL,[\s\S]*valign:\s*Gtk\.Align\.FILL,[\s\S]*hexpand:\s*true,[\s\S]*vexpand:\s*true,[\s\S]*\}\);/,
-        'the EventBox must be a windowed, above-child, app-paintable, non-focusable fill overlay',
-    );
+    const eventBoxStart = source.indexOf('const inputLayer = new Gtk.EventBox({');
+    const eventBoxEnd = source.indexOf('\n    });', eventBoxStart);
+    assert.notEqual(eventBoxStart, -1, 'the renderer must create an EventBox input layer');
+    assert.ok(eventBoxEnd > eventBoxStart, 'the EventBox constructor must have a closing marker');
+    const eventBoxConfig = source.slice(eventBoxStart, eventBoxEnd);
+    for (const [property, pattern] of [
+        ['above-child stacking', /above_child:\s*true/],
+        ['a visible Gdk window', /visible_window:\s*true/],
+        ['application-managed painting', /app_paintable:\s*true/],
+        ['non-focusable input', /can_focus:\s*false/],
+        ['horizontal fill', /halign:\s*Gtk\.Align\.FILL/],
+        ['vertical fill', /valign:\s*Gtk\.Align\.FILL/],
+        ['horizontal expansion', /hexpand:\s*true/],
+        ['vertical expansion', /vexpand:\s*true/],
+    ]) {
+        assert.match(eventBoxConfig, pattern, `the EventBox must configure ${property}`);
+    }
     assert.match(source, /overlay\.add\(terminal\);/);
     assert.match(source, /overlay\.add_overlay\(inputLayer\);/);
     assert.match(source, /window\.add\(overlay\);/);
