@@ -29,25 +29,13 @@ function stop() {
     app.quit();
 }
 
-function hideRendererPointer() {
-    const root = window?.get_window();
-    if (!root)
+function blankPointerOn(widget) {
+    const gdkWindow = widget?.get_window();
+    if (!gdkWindow)
         return;
-
     if (!blankCursor)
-        blankCursor = Gdk.Cursor.new_for_display(root.get_display(), Gdk.CursorType.BLANK_CURSOR);
-
-    const applyBlankCursor = (gdkWindow) => {
-        if (!gdkWindow)
-            return;
-        gdkWindow.set_cursor(blankCursor);
-        const children = gdkWindow.get_children?.();
-        if (!children)
-            return;
-        for (const child of children)
-            applyBlankCursor(child);
-    };
-    applyBlankCursor(root);
+        blankCursor = Gdk.Cursor.new_for_display(gdkWindow.get_display(), Gdk.CursorType.BLANK_CURSOR);
+    gdkWindow.set_cursor(blankCursor);
 }
 
 function runEffect() {
@@ -75,32 +63,44 @@ app.connect('activate', () => {
         cursor_shape: Vte.CursorShape.BLOCK,
         scroll_on_output: false,
     });
-    terminal.add_events(Gdk.EventMask.POINTER_MOTION_MASK | Gdk.EventMask.KEY_PRESS_MASK);
+    terminal.add_events(Gdk.EventMask.KEY_PRESS_MASK);
     terminal.set_color_background(new Gdk.RGBA({red: 0, green: 0, blue: 0, alpha: 1}));
     terminal.connect('child-exited', () => {
         if (!stopping)
             runEffect();
     });
-    terminal.connect('motion-notify-event', () => {
-        stop();
-        return true;
-    });
     terminal.connect('key-press-event', () => {
         stop();
         return true;
     });
-    window.add(terminal);
+    const overlay = new Gtk.Overlay();
+    const inputLayer = new Gtk.EventBox({
+        above_child: true,
+        visible_window: true,
+        app_paintable: true,
+        can_focus: false,
+        halign: Gtk.Align.FILL,
+        valign: Gtk.Align.FILL,
+        hexpand: true,
+        vexpand: true,
+    });
+    inputLayer.add_events(Gdk.EventMask.POINTER_MOTION_MASK);
+    inputLayer.connect('draw', () => true);
+    inputLayer.connect('motion-notify-event', () => {
+        stop();
+        return true;
+    });
+    inputLayer.connect('realize', () => blankPointerOn(inputLayer));
+    overlay.add(terminal);
+    overlay.add_overlay(inputLayer);
+    window.add(overlay);
     window.connect('delete-event', () => {
         stop();
         return false;
     });
-    window.connect('realize', hideRendererPointer);
-    terminal.connect('realize', hideRendererPointer);
-    terminal.connect_after('enter-notify-event', () => {
-        hideRendererPointer();
-        return false;
-    });
+    window.connect('realize', () => blankPointerOn(window));
     window.show_all();
+    terminal.grab_focus();
     runEffect();
 });
 
