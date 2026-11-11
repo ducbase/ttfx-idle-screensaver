@@ -2,7 +2,7 @@
 An idle-triggered TTFX screensaver for GNOME Shell on Ubuntu
 # TTFX Idle Screensaver
 
-A GNOME Shell 48 extension for Ubuntu that starts a full-screen `ttfx` animation after an idle delay. It is a visual effect, not a lock screen.
+A GNOME Shell extension for Ubuntu (Shell 48, 49, and 50) that starts a full-screen `ttfx` animation after an idle delay. It is a visual effect, not a lock screen.
 
 ![TTFX idle screensaver](docs/screensaver.webp)
 
